@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>检验比对</title>
+    <script src="js-xlsx-master/dist/shim.min.js"></script>
+    <script src="js-xlsx-master/dist/xlsx.full.min.js"></script>
+    <script src="js/jquery-1.11.1/jquery.min.js"></script>
+    <script src="bootstrap-4.1.1/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="bootstrap-4.1.1/dist/css/bootstrap.min.css">
+
+
+    <!--[if IE]>
+    <script>
+        alert("不支持IE浏览器！");
+    </script>
+    <![endif]-->
+
+</head>
+<body>
+    <div class="container">
+        <div>
+            <p class="text-center">Excel表格的格式不要改变，否则读取内容的计算逻辑会出错！</p>
+        </div>
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="student">学生表</label>
+                    <input type="file" class="form-control-file" id="student">
+                </div>
+                <div class="form-group col-md-4">
+
+                </div>
+                <div class="form-group col-md-4">
+                    <p>学生编码表 读取 第一个sheet的内容。</p>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="income">收据表</label>
+                    <input type="file" class="form-control-file" id="income">
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="income_time">收费月份</label>
+                    <input type="text" class="form-control" id="income_time" placeholder="收费月份2018-6,2018/6,2018年6,20186都可以！">
+                </div>
+                <div class="form-group col-md-4">
+                    <p>收据表 读取第一个sheet的内容。</p>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <label for="class">课耗表</label>
+                    <input type="file" class="form-control-file" id="class">
+                </div>
+                <div class="form-group col-md-4">
+
+                </div>
+                <div class="form-group col-md-4">
+                    <p>课耗表 读取sheet名字为 数据源 的内容，若有密码则需要将密码去掉。</p>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-2">
+                    <label for="class">一对一编码</label>
+                    <input type="text" class="form-control" id="code_1" placeholder="请输入一对一编码">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">班课编码</label>
+                    <input type="text" class="form-control" id="code_2" placeholder="请输入班课编码">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">托管编码</label>
+                    <input type="text" class="form-control" id="code_3" placeholder="请输入托管编码">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">艺术编码</label>
+                    <input type="text" class="form-control" id="code_7" placeholder="请输入艺术编码">
+                </div>
+                <div class="form-group col-md-4">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">活动1编码</label>
+                    <input type="text" class="form-control" id="code_4" placeholder="请输入其他-活动1编码">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">活动2编码</label>
+                    <input type="text" class="form-control" id="code_8" placeholder="请输入其他-活动2编码">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">车费编码</label>
+                    <input type="text" class="form-control" id="code_5" placeholder="请输入其他-车费编码">
+                </div>
+                <div class="form-group col-md-2">
+                    <label for="class">资料费编码</label>
+                    <input type="text" class="form-control" id="code_6" placeholder="请输入其他-资料费编码">
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-outline-primary" onclick="readExcel();">读取Excel</button>
+            <button type="button" class="btn btn-outline-primary" onclick="createExcel();">导出结果</button>
+
+        </form>
+
+        <table class="table table-bordered" style="margin-top: 16px;">
+            <thead>
+            <tr>
+                <th scope="col" style="text-align: center;">文件</th>
+                <th scope="col" style="text-align: center;">状态</th>
+                <th scope="col" style="text-align: center;">记录数</th>
+                <th scope="col" style="text-align: center;">课时金额</th>
+                <th scope="col" style="text-align: center;">其他金额</th>
+                <th scope="col" style="text-align: center;">合计金额</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td style="text-align: center;">学生表</td>
+                <td id="stu_status" style="text-align: center;"></td>
+                <td id="stu_count" style="text-align: right;"></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">收据表</td>
+                <td id="inc_status" style="text-align: center;"></td>
+                <td id="inc_count" style="text-align: right;"></td>
+                <td id="inc_amount1" style="text-align: right;"></td>
+                <td id="inc_amount2" style="text-align: right;"></td>
+                <td id="inc_amount3" style="text-align: right;"></td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">课耗表</td>
+                <td id="cla_status" style="text-align: center;"></td>
+                <td id="cla_count" style="text-align: right;"></td>
+                <td id="cla_amount" style="text-align: right;"></td>
+                <td id="cla_remark" colspan="2"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div style="height: 30px;">
+            <span id="cre_info"></span>
+        </div>
+
+    </div>
+
+    <script src="js/student.js"></script>
+    <script src="js/income.js"></script>
+    <script src="js/class.js"></script>
+    <script>
+
+        var studentArr_ = [];
+        var studentMap_ = {};
+        var studentStatus_ = 0;
+
+        var incomeArr_ = [];
+        var incomeStatus_ = 0;
+
+        var classArr_ = [];
+        var classStatus_ = 0;
+
+       $(function(){
+           // var now = new Date();
+           // var year = now.getFullYear();
+           // var month = now.getMonth() + 1;
+           // $("#income_time").val(""+year+(month > 9?month:"0"+month));
+       });
+
+
+        function readExcel(){
+            var studentFile = document.getElementById("student");
+            if(studentFile.value == ""){
+                alert("请选择学生编码信息文件！");
+                return;
+            }
+            var incomeFile = document.getElementById("income");
+            if(incomeFile.value == ""){
+                alert("请选择收据表文件！");
+                return;
+            }
+            var incomeTime = document.getElementById("income_time").value;
+            if(incomeTime == ""){
+                alert("请填写收费年月");
+                return;
+            }
+            var classFile = document.getElementById("class");
+            if(classFile.value == ""){
+                alert("请选择课耗表表文件！");
+                return;
+            }
+
+            studentStatus_ = 0;
+            studentArr_ = [];
+            studentMap_ = {};
+            $("#stu_status").text("");
+            $("#stu_count").text("");
+
+            $("#stu_status").text("读取中...");
+            readStudent("student", studentArr_, studentMap_);
+
+            incomeArr_ = [];
+            incomeStatus_ = 0;
+            $("#inc_status").text("");
+            $("#inc_count").text("");
+            $("#inc_amount1").text("");
+            $("#inc_amount2").text("");
+            $("#inc_amount3").text("");
+
+            $("#inc_status").text("读取中...");
+            readIncome("income", incomeArr_, null,incomeTime);
+
+            classArr_ = [];
+            classStatus_ = 0;
+            $("#cla_status").text("");
+            $("#cla_count").text("");
+            $("#cla_amount").text("");
+            $("#cla_remark").text("");
+
+            $("#cla_status").text("读取中...");
+            readClass("class", classArr_, null);
+
+        }
+
+
+        // 创建一个新的 xlsx
+        function createExcel(){
+
+            if(studentStatus_ == 1 && incomeStatus_ == 1 && classStatus_ == 1){
+                $("#cre_info").text("正在处理...");
+
+                var wb = XLSX.utils.book_new();
+                // 写出 一对一 数据
+                writeClass("一对一","一对一",wb);
+                // 写出 班课 数据
+                writeClass("班课","班课",wb);
+                // 写出 托管 数据
+                writeClass("托管","托管",wb);
+                // 写出 艺术 数据
+                writeClass("艺术","艺术",wb);
+                // 写出 收据 数据
+                writeIncome("收据",wb);
+
+                XLSX.writeFile(wb, 'out.xlsx');
+
+                $("#cre_info").text("处理成功");
+            }else{
+                $("#cre_info").text("所有文件全部读取成功才可以导出结果。");
+            }
+        }
+
+        // 写出课时数据
+        function writeClass(type, sheetName, book){
+            var result = [];
+
+            // var classArrCopy = classArr_.slice(0);
+            var classArrCopy = JSON.parse(JSON.stringify(classArr_));
+
+            var classArr = [];
+            // 在课时表中 去除对应类型的 数据 实际课耗 大于 0 的数据
+            if(classArrCopy != null && classArrCopy.length > 0){
+                for(var i = 0; i < classArrCopy.length; i++){
+                    if(classArrCopy[i].type == type && classArrCopy[i].spend != 0){
+                        classArr.push(classArrCopy[i]);
+                    }
+                }
+            }
+
+            var classArr2 = [];
+            var classMap = {};
+            // 将相同学生 相同单价的 数据进行合并
+            if(classArr.length > 0){
+                for(var i = 0; i < classArr.length; i++){
+                    var key = getClassKey(classArr[i]);
+                    if(classMap[key] === null || classMap[key] === undefined){
+                        classArr2.push(classArr[i]);
+                        classMap[key] = classArr2.length - 1;
+                    }else{
+                        // 获取放入到原来列表中的数据
+                        var classInfo = classArr2[classMap[key]];
+                        // 将现在的数据 课耗 加到以前的数据上
+                        classInfo.spend = classInfo.spend + classArr[i].spend;
+                    }
+                }
+            }
+
+            // 获取学生的辅助编码,计算课次
+            if(classArr2.length > 0){
+                var studentCode;
+                for(var i = 0; i < classArr2.length; i++){
+                    var remark = "";
+                    // 计算课次
+                    if(classArr2[i].price > 0){
+                        classArr2[i].count = new Number(classArr2[i].spend/classArr2[i].price).toFixed(4);
+                    }else{
+                        classArr2[i].count = 1;
+                        classArr2[i].price = classArr2[i].spend;
+                        remark += "请检查课耗表的单次价格，已课次自动设为1！";
+                    }
+                    // 获取学生的辅助编码
+                    studentCode = getStudentCodeByName(studentArr_,studentMap_,classArr2[i].name);
+                    if(studentCode == ""){
+                        classArr2[i].studentCode = studentCode;
+                        remark += "没有匹配到辅助代码！"
+                    }else{
+                        classArr2[i].studentCode = studentCode;
+                    }
+                    classArr2[i].remark = remark;
+                }
+                // 根据学生编号 重新排序
+                classArr2.sort(studentClassCompare);
+            }
+
+            // 转为要导出的格式
+            if(classArr2.length > 0){
+                for(var i = 0; i < classArr2.length; i++){
+                    result.push({
+                        "序号": (i+1),
+                        "学生姓名": classArr2[i].name,
+                        "班型": type,
+                        "单次收费": classArr2[i].price,
+                        "课次-计算": classArr2[i].count,
+                        "课次":null,
+                        "实际课耗": classArr2[i].spend,
+                        "辅助代码": classArr2[i].studentCode,
+                        "备注": classArr2[i].remark
+                    });
+                }
+            }
+
+            if(result.length > 0){
+                var ws = XLSX.utils.json_to_sheet(result);
+                XLSX.utils.book_append_sheet(book, ws, sheetName);
+            }
+
+        }
+
+        // 写出收据
+        function writeIncome(sheetName, book){
+            var result = [];
+
+            // var incomeArrCopy = incomeArr_.slice(0);
+            // var incomeArrCopy2 = incomeArr_.slice(0);
+            var incomeArrCopy = JSON.parse(JSON.stringify(incomeArr_));
+            var incomeArrCopy2 = JSON.parse(JSON.stringify(incomeArr_));
+
+
+            var otherIncomeArr = [];
+            var classIncomeArr = [];
+
+            // 将其他收入 / 课时收入 分开
+            if(incomeArrCopy != null && incomeArrCopy.length > 0){
+                for(var i = 0;i < incomeArrCopy.length; i++){
+                    if(incomeArrCopy[i].otherTotal != 0){
+                        otherIncomeArr.push(incomeArrCopy[i]);
+                    }
+                }
+            }
+            if(incomeArrCopy2 != null && incomeArrCopy2.length > 0){
+                for(var i = 0;i < incomeArrCopy2.length; i++){
+                    if(incomeArr_[i].classTotal > 0 || incomeArr_[i].classTotal < 0){
+                        classIncomeArr.push(incomeArrCopy2[i]);
+                    }
+                }
+            }
+
+
+            var classIncomeArr2 = [];
+            var classIncomeMap = {};
+            // var classIncomeUseMap ={};
+            // 检查是否存在多次 充值的，将信息合并 且 增加备注
+            if(classIncomeArr.length > 0){
+                var remark;
+                for(var i = 0;i < classIncomeArr.length; i++){
+                    remark = ""
+                    var key = classIncomeArr[i].name;
+                    if(classIncomeMap[key] === null || classIncomeMap[key] === undefined){
+                        classIncomeArr[i].remark = remark;
+                        classIncomeArr2.push(classIncomeArr[i]);
+                        classIncomeMap[key] = classIncomeArr2.length - 1;
+                    }else{
+                        // 获取放入到原来列表中的数据
+                        var classIncome = classIncomeArr2[classIncomeMap[key]];
+
+                        if(classIncome.remark == null || classIncome.remark == ""){
+                            remark = "需要手动拆分：";
+                            remark += classIncome.no + "->" + classIncome.classTotal + ",";
+                        }else{
+                            remark = classIncome.remark;
+                        }
+                        remark += classIncomeArr[i].no + "->" + classIncomeArr[i].classTotal + ",";
+                        classIncome.remark = remark;
+                        // 将现在的数据 课耗 加到以前的数据上
+                        classIncome.classTotal = classIncome.classTotal + classIncomeArr[i].classTotal;
+                    }
+                }
+
+                // //
+                // for(var p in classIncomeMap){
+                //     classIncomeUseMap[p] = 0;
+                // }
+
+
+            }
+
+            // 取出与充值有关的课耗表
+            // 找出单个学生累计 金额为0的数据
+            // var classArrCopy = classArr_.slice(0);
+            var classArrCopy = JSON.parse(JSON.stringify(classArr_));;
+            var classInfoArr = [];
+            var studentTotal = {};
+            if(classArrCopy!= null && classArrCopy.length > 0){
+                for(var i = 0;i < classArrCopy.length; i++){
+                    if(classArrCopy[i].total > 0 || classArrCopy[i].total < 0){
+                        classInfoArr.push(classArrCopy[i]);
+
+                        if(studentTotal[classArrCopy[i].name] == null){
+                            studentTotal[classArrCopy[i].name] = classArrCopy[i].total;
+                        }else{
+                            studentTotal[classArrCopy[i].name] = studentTotal[classArrCopy[i].name] + classArrCopy[i].total;
+                        }
+                    }
+                }
+            }
+
+            // 将相同单价的 课耗 合并到一块
+            var classInfoArr2 = [];
+            var classInfoMap = {};
+            // 将相同学生 相同单价的 数据进行合并
+            if(classInfoArr.length > 0){
+                for(var i = 0; i < classInfoArr.length; i++){
+                    var key = getClassKey(classInfoArr[i]);
+                    if(classInfoMap[key] === null || classInfoMap[key] === undefined){
+                        classInfoArr2.push(classInfoArr[i]);
+                        classInfoMap[key] = classInfoArr2.length - 1;
+                    }else{
+                        // 获取放入到原来列表中的数据
+                        var classInfo = classInfoArr2[classInfoMap[key]];
+                        // 将现在的数据 课耗 加到以前的数据上
+                        classInfo.total = classInfo.total + classInfoArr[i].total;
+                    }
+                }
+            }
+
+            // 将收据表 与 课耗表组合
+            if(classInfoArr2.length > 0){
+
+                for(var i = 0; i < classInfoArr2.length; i++){
+
+                    // 如果学生的累计金额为 0 则直接跳过
+
+                    if(Math.abs(studentTotal[classInfoArr2[i].name]) <= 0.000000001){
+                        continue;
+                    }
+
+                    var remark = "";
+                    var income = null;
+                    var incomeIndex = classIncomeMap[classInfoArr2[i].name];
+                    if(incomeIndex != null){
+                        income = classIncomeArr2[incomeIndex];
+
+                        // classIncomeUseMap[classInfoArr2[i].name] = 1;
+                    }
+
+                    if(income == null){
+                        remark += "没有匹配到收据信息!";
+                        result.push({
+                            "序号":null,
+                            "收据号":null,
+                            "学生姓名":classInfoArr2[i].name,
+                            "课次":null,
+                            "班型":classInfoArr2[i].type,
+                            "单价":classInfoArr2[i].price,
+                            "课次计算":null,
+                            "金额":classInfoArr2[i].total,
+                            "科目代码":null,
+                            "辅助代码":null,
+                            "备注": remark
+                        })
+                    }else{
+                        remark += income.remark;
+                        result.push({
+                            "序号":null,
+                            "收据号":income.no,
+                            "学生姓名":classInfoArr2[i].name,
+                            "课次":null,
+                            "班型":classInfoArr2[i].type,
+                            "单价":classInfoArr2[i].price,
+                            "课次计算":null,
+                            "金额":classInfoArr2[i].total,
+                            "科目代码":null,
+                            "辅助代码":null,
+                            "备注": remark
+                        })
+                    }
+                }
+            }
+
+            // // 将只有收据信息的数据写到收据中
+            // for(var p in classIncomeUseMap){
+            //     if(classIncomeMap[p] == 0){
+            //         var index =  classIncomeMap[p];
+            //         if(index != null){
+            //             var income = classIncomeArr2[index];
+            //             result.push({
+            //                 "序号":null,
+            //                 "收据号":income.no,
+            //                 "学生姓名":income.name,
+            //                 "课次":null,
+            //                 "班型":'',
+            //                 "单价":null,
+            //                 "金额":income.classTotal,
+            //                 "课次计算":null,
+            //                 "科目代码":null,
+            //                 "辅助代码":null,
+            //                 "备注": '只有收据，没有课耗'
+            //             })
+            //         }
+            //     }
+            // }
+
+
+
+            // 课次计算，获取科目代码，辅助代码
+            if(result.length > 0){
+                var type;
+                var studentCode;
+                var typeCode;
+                for(var i = 0; i < result.length; i++){
+                    // 课次计算
+                    if(result[i]["单价"]!=null && result[i]["单价"] != 0){
+                        result[i]["课次计算"] = new Number(result[i]["金额"]/result[i]["单价"]).toFixed(4);
+                    }else{
+                        result[i]["备注"] = result[i]["备注"] + "请检查课耗表的单次价格！";
+                        result[i]["课次计算"] = 0;
+                    }
+                    // 获取科目代码
+                    type = result[i]["班型"];
+                    if(type == null || type == ""){
+                        result[i]["备注"] = result[i]["备注"] + "请检查课耗表的班型！";
+                    }else{
+                        typeCode = getTypeCode(type);
+                        result[i]["科目代码"] = typeCode;
+                        if(typeCode == ""){
+                            result[i]["备注"] = result[i]["备注"] + "没有匹配到科目代码！";
+                        }
+                    }
+                    // 获取辅助代码
+                    // 获取学生的辅助编码
+                    studentCode = getStudentCodeByName(studentArr_,studentMap_,result[i]["学生姓名"]);
+                    result[i]["辅助代码"] = studentCode;
+                    if(studentCode == ""){
+                        result[i]["备注"] = result[i]["备注"] + "没有匹配到辅助代码！";
+                    }
+
+                }
+            }
+
+            // 将其他收入写入结果中
+            if(otherIncomeArr.length > 0){
+                var remark;
+                var studentCode;
+
+                for(var i = 0; i < otherIncomeArr.length; i++){
+                    remark = "";
+                    studentCode = getStudentCodeByName(studentArr_,studentMap_,otherIncomeArr[i].name);
+                    if(studentCode == ""){
+                        remark = "没有匹配到辅助代码！";
+                    }
+                    if(otherIncomeArr[i].i51 != 0){
+                        result.push({
+                            "序号":null,
+                            "收据号":otherIncomeArr[i].no,
+                            "学生姓名":otherIncomeArr[i].name,
+                            "课次":null,
+                            "班型":"其他业务收入",
+                            "单价":"活动1",
+                            "课次计算":null,
+                            "金额":otherIncomeArr[i].i51,
+                            "科目代码":getTypeCode("其他-活动1"),
+                            "辅助代码":studentCode,
+                            "备注": remark
+                        });
+                    }
+
+                    if(otherIncomeArr[i].i54 != 0){
+                        result.push({
+                            "序号":null,
+                            "收据号":otherIncomeArr[i].no,
+                            "学生姓名":otherIncomeArr[i].name,
+                            "课次":null,
+                            "班型":"其他业务收入",
+                            "单价":"活动2",
+                            "课次计算":null,
+                            "金额":otherIncomeArr[i].i53,
+                            "科目代码":getTypeCode("其他-活动2"),
+                            "辅助代码":studentCode,
+                            "备注": remark
+                        });
+                    }
+
+                    if(otherIncomeArr[i].i52 != 0){
+                        result.push({
+                            "序号":null,
+                            "收据号":otherIncomeArr[i].no,
+                            "学生姓名":otherIncomeArr[i].name,
+                            "课次":null,
+                            "班型":"其他业务收入",
+                            "单价":"车费",
+                            "课次计算":null,
+                            "金额":otherIncomeArr[i].i52,
+                            "科目代码":getTypeCode("其他-车费"),
+                            "辅助代码":studentCode,
+                            "备注": remark
+                        });
+                    }
+
+                    if(otherIncomeArr[i].i53 != 0){
+                        result.push({
+                            "序号":null,
+                            "收据号":otherIncomeArr[i].no,
+                            "学生姓名":otherIncomeArr[i].name,
+                            "课次":null,
+                            "班型":"其他业务收入",
+                            "单价":"资料费",
+                            "课次计算":null,
+                            "金额":otherIncomeArr[i].i53,
+                            "科目代码":getTypeCode("其他-资料费"),
+                            "辅助代码":studentCode,
+                            "备注": remark
+                        });
+                    }
+
+
+
+
+
+                    // result.push({
+                    //     "序号":null,
+                    //     "收据号":otherIncomeArr[i].no,
+                    //     "学生姓名":otherIncomeArr[i].name,
+                    //     "课次":null,
+                    //     "班型":"其他业务收入",
+                    //     "单价":"游学",
+                    //     "金额":otherIncomeArr[i].otherTotal,
+                    //     "课次计算":null,
+                    //     "科目代码":typeCode,
+                    //     "辅助代码":studentCode,
+                    //     "备注": remark
+                    // });
+                }
+            }
+
+
+
+            if(result.length > 0){
+                // 排序
+                result.sort(incomeOutputCompare);
+                // 赋值序号
+                for(var i = 0; i < result.length; i++){
+                    result[i]["序号"] = (i+1);
+                }
+            }
+
+            // 将数据写出
+            if(result.length > 0){
+                var ws = XLSX.utils.json_to_sheet(result);
+                XLSX.utils.book_append_sheet(book, ws, sheetName);
+            }
+        }
+
+        // 根据学生姓名 单次收费 获取唯一 字符串
+        function getClassKey(classInfo){
+            var name = classInfo.name == null ?"":classInfo.name;
+            var price = classInfo.price == null?"0":classInfo.price.toFixed(4);
+            price = price.replace(".","");
+            return name+"-"+price;
+        }
+
+        // 上课信息排序
+        function studentClassCompare(x, y){
+            var codeX = x.studentCode;
+            var codeY = y.studentCode;
+
+            if(codeX == null ||  codeX == ""){
+                codeX = "0";
+            }
+            if(codeY == null ||  codeY == ""){
+                codeY = "0";
+            }
+            if(codeX < codeY){
+                return -1;
+            }else if(codeX > codeY){
+                return 1;
+            }else {
+                return 0;
+            }
+        }
+
+        // 收据信息排序
+        function incomeOutputCompare(x, y){
+            var codeX = x["收据号"];
+            var codeY = y["收据号"];
+            if(codeX == null ||  codeX == ""){
+                codeX = "0";
+            }
+            if(codeY == null ||  codeY == ""){
+                codeY = "0";
+            }
+            if(codeX < codeY){
+                return -1;
+            }else if(codeX > codeY){
+                return 1;
+            }else {
+                return 0;
+            }
+        }
+
+        // 获取科目代码
+        function getTypeCode(type){
+            if(type=="一对一"){
+                return $("#code_1").val();
+            }else if (type=="班课"){
+                return $("#code_2").val();
+            }else if(type=="托管"){
+                return $("#code_3").val();
+            }else if(type == "其他-活动1"){
+                return $("#code_4").val();
+            }else if(type == "其他-车费"){
+                return $("#code_5").val();
+            }else if(type == "其他-资料费"){
+                return $("#code_6").val();
+            }else if(type == "艺术"){
+                return $("#code_7").val();
+            }else if(type == "其他-活动2"){
+                return $("#code_8").val();
+            }
+            return "";
+        }
+    </script>
+</body>
+</html>
