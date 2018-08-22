@@ -297,7 +297,7 @@
                     }else{
                         classArr2[i].count = 1;
                         classArr2[i].price = classArr2[i].spend;
-                        remark += "请检查课耗表的单次价格，已课次自动设为1！";
+                        remark += "请检查课耗表的单次价格，课次自动设为1！";
                     }
                     // 获取学生的辅助编码
                     studentCode = getStudentCodeByName(studentArr_,studentMap_,classArr2[i].name);
@@ -533,8 +533,9 @@
                     if(result[i]["单价"]!=null && result[i]["单价"] != 0){
                         result[i]["课次计算"] = new Number(result[i]["金额"]/result[i]["单价"]).toFixed(4);
                     }else{
-                        result[i]["备注"] = result[i]["备注"] + "请检查课耗表的单次价格！";
-                        result[i]["课次计算"] = 0;
+                        result[i]["备注"] = result[i]["备注"] + "请检查课耗表的单次价格,课次自动设为1！";
+                        result[i]["课次计算"] = 1;
+                        result[i]["单价"] = result[i]["金额"];
                     }
                     // 获取科目代码
                     type = result[i]["班型"];
